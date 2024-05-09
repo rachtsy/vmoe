@@ -1,0 +1,6 @@
+Looking in indexes: https://pypi.org/simple, https://pypi.ngc.nvidia.com
+Requirement already satisfied: jax in /usr/local/lib/python3.10/dist-packages (0.4.27)
+Requirement already satisfied: ml-dtypes>=0.2.0 in /usr/local/lib/python3.10/dist-packages (from jax) (0.3.2)
+Requirement already satisfied: numpy>=1.22 in /root/.local/lib/python3.10/site-packages (from jax) (1.25.2)
+Requirement already satisfied: opt-einsum in /usr/local/lib/python3.10/dist-packages (from jax) (3.3.0)
+Requirement already satisfied: scipy>=1.9 in /usr/local/lib/python3.10/dist-packages (from jax) (1.10.1)
