@@ -260,8 +260,8 @@ def get_vmoe_config(description: str, image_size: int,
   # Momentum
   if momentum == 'Momentum':
     config.encoder.momentum = True
-    config.encoder.mu = 0.9
-    config.encoder.gamma = 1.0
+    config.encoder.mu = 0.2
+    config.encoder.gamma = 1.25
   elif momentum == 'Base':
     config.encoder.momentum = False
     config.encoder.mu = 0

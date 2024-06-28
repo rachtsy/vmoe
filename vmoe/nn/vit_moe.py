@@ -179,32 +179,45 @@ class EncoderBlock(nn.Module):
     x = x + inputs
     # MLP-MoE block.
     y = nn.LayerNorm(dtype=self.dtype)(x)
-    # if self.momentum:
-    #   mlp_moment = moment[0]
-    #   moe_moment = moment[1]
-    #   L = 1.0
-    #   eps = self.mu ** 3 / ((self.gamma-1)*((1-self.mu)**2)*(1+self.mu))
-    #   beta = self.gamma*((1-self.mu)**2)*(1+self.mu)/L
-    #   alpha = self.gamma*(self.mu**3)/(self.gamma-1)
-    #   new_y = y + eps * beta * moe_moment
-    #   y = self.mlp_block(dtype=self.dtype, deterministic=self.deterministic)(y)
+
+    ### <<< Momentum >>> ###
+    # y = self.mlp_block(dtype=self.dtype, deterministic=self.deterministic)(y)
+    # if isinstance(y, jnp.ndarray):
+    #   out = nn.LayerNorm(dtype=self.dtype)(x + y)
+    #   return out, moment
+    # elif self.momentum:
+    #   y, metrics = y
+    #   moment = self.mu * moment + self.gamma * y
+    #   out = nn.LayerNorm(dtype=self.dtype)(x - moment)
+    #   return out, moment, metrics
     # else:
-    y = self.mlp_block(dtype=self.dtype, deterministic=self.deterministic)(y)
+    #   y, metrics = y
+    #   return x + y, moment, metrics
+
+    ### <<< ROBUST MOMENTUM >>> ####
+    if self.momentum:
+      L = 1.0
+      eps = self.mu ** 3 / ((self.gamma-1)*((1-self.mu)**2)*(1+self.mu))
+      beta = self.gamma*((1-self.mu)**2)*(1+self.mu)/L
+      alpha = self.gamma*(self.mu**3)/(self.gamma-1)
+      new_y = y + eps * beta * moment
+      y = self.mlp_block(dtype=self.dtype, deterministic=self.deterministic)(new_y)
+    else:
+      y = self.mlp_block(dtype=self.dtype, deterministic=self.deterministic)(y)
     if isinstance(y, jnp.ndarray):
-      out = nn.LayerNorm(dtype=self.dtype)(x + y)
-      # mlp_moment = self.mu * mlp_moment + self.gamma * y
+      if self.momentum:
+        out = nn.LayerNorm(dtype=self.dtype)(x + y)
+      else: 
+        out = x + y
       return out, moment
-      # return x + mlp_moment, (mlp_moment, moe_moment)
     elif self.momentum:
-      # new_inp = inp + eps * beta * moment
       y, metrics = y
-      moment = self.mu * moment + self.gamma * y
-      out = nn.LayerNorm(dtype=self.dtype)(x - moment)
+      moment = - y + alpha * moment
+      out = nn.LayerNorm(dtype=self.dtype)(x + beta * moment)
       return out, moment, metrics
     else:
       y, metrics = y
       return x + y, moment, metrics
-
 
 class EncoderMoe(nn.Module):
   """Transformer encoder with optional blocks of Sparse MoE of MLPs.

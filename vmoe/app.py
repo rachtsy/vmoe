@@ -63,7 +63,7 @@ def run(main):
 def _main(argv, *, main) -> None:
   """Runs the `main` method after some initial setup."""
   os.environ["WANDB_API_KEY"]="f9b91afe90c0f06aa89d2a428bd46dac42640bff"
-  wandb.init(project="momentum_vision_moe")
+  wandb.init(project="rebuttal_vmoe")
   wandb.run.name = FLAGS.jobname
   wandb.config.update(FLAGS.config)
   del argv
